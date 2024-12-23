@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Tiro</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000; /* Fundo preto para o espaço */
+        }
+        canvas {
+            display: block;
+            margin: auto;
+            background-color: #111; /* Fundo do jogo */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let ship = { x: 400, y: 550, width: 40, height: 20 };
+        let bullets = [];
+        let enemies = [];
+        let score = 0;
+
+        function drawShip() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
+        }
+
+        function drawBullets() {
+            ctx.fillStyle = 'yellow';
+            bullets.forEach(bullet => {
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            });
+        }
+
+        function drawEnemies() {
+            ctx.fillStyle = 'red';
+            enemies.forEach(enemy => {
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+            });
+        }
+
+        function updateBullets() {
+            bullets.forEach((bullet, index) => {
+                bullet.y -= bullet.speed;
+                if (bullet.y < 0) {
+                    bullets.splice(index, 1);
+                }
+            });
+        }
+
+        function updateEnemies() {
+            enemies.forEach((enemy, index) => {
+                enemy.y += enemy.speed;
+
+                if (enemy.y > canvas.height) {
+                    enemies.splice(index, 1);
+                }
+
+                bullets.forEach((bullet, bulletIndex) => {
+                    if (
+                        bullet.x < enemy.x + enemy.width &&
+                        bullet.x + bullet.width > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + bullet.height > enemy.y
+                    ) {
+                        enemies.splice(index, 1);
+                        bullets.splice(bulletIndex, 1);
+                        score += 10;
+                    }
+                });
+            });
+        }
+
+        function spawnEnemy() {
+            const x = Math.random() * (canvas.width - 40);
+            enemies.push({ x: x, y: 0, width: 40, height: 20, speed: 2 });
+        }
+
+        function drawScore() {
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Pontuação: ${score}`, 10, 20);
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawShip();
+            drawBullets();
+            drawEnemies();
+            drawScore();
+            
+            updateBullets();
+            updateEnemies();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'ArrowLeft' && ship.x > 0) {
+                ship.x -= 15; // Move a nave para a esquerda
+            } else if (event.code === 'ArrowRight' && ship.x < canvas.width - ship.width) {
+                ship.x += 15; // Move a nave para a direita
+            } else if (event.code === 'Space') {
+                bullets.push({ x: ship.x + ship.width / 2 - 2.5, y: ship.y - 10, width: 5, height: 10, speed: 5 });
+            }
+        });
+
+        setInterval(spawnEnemy, 1000); // Spawn inimigos a cada segundo
+        gameLoop();
+    </script>
+</body>
+</html>
